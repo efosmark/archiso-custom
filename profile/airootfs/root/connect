@@ -1,0 +1,36 @@
+#!/usr/bin/sh
+
+curl -s http://github.com > /dev/null
+if [ $? -eq 0 ]; then
+    echo "Already connected to the internet."
+    exit
+fi
+
+echo "Not connected to the internet. Attempting WLAN..."
+WLAN_IFACE=$(ls /sys/class/net | grep ^wl)
+
+echo "$WLAN_IFACE - WLAN interface found"
+echo "$WLAN_IFACE - Scanning for SSIDs..."
+echo ""
+
+WLAN_SSID_OPTS=$(
+    sudo iw dev "$WLAN_IFACE" scan \
+    | grep "SSID:" \
+    | sed -n -E 's/^[[:space:]]+SSID\: (.*)$/\1/p' \
+    | uniq -i \
+    | head -n 10 || exit
+)
+
+WLAN_SSID=$(echo "$WLAN_SSID_OPTS" | fzf --disabled --height=10 --header="Select an SSID" --reverse)
+echo "$WLAN_IFACE - Using SSID: $WLAN_SSID"
+echo
+printf "PASSPHRASE: "
+read WLAN_PASSPHRASE
+
+sudo iwctl \
+    --passphrase="$WLAN_PASSPHRASE" \
+    station "$WLAN_IFACE" \
+    connect "$WLAN_SSID" || exit
+
+echo
+echo "$WLAN_IFACE - Connected to '$WLAN_SSID'."

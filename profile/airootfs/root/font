@@ -1,0 +1,66 @@
+#!/usr/bin/sh
+
+FONT_DIR="/usr/share/kbd/consolefonts"
+if [ ! -d "$FONT_DIR" ]; then
+    echo "Font directory $FONT_DIR not found!"
+    exit 1
+fi
+
+PATTERNS="ter-.*n\.psf\.gz"
+
+# List fonts matching the patterns
+FONTS=$(ls "$FONT_DIR"/*.gz 2>/dev/null | grep -E "$PATTERNS" | sort)
+FONT_COUNT=$(echo "$FONTS" | wc -l)
+
+if [ "$FONT_COUNT" -eq 0 ]; then
+    echo "No matching fonts found with the pattern '$PATTERNS'."
+    exit 1
+fi
+
+# Convert font list to an array for easier navigation
+FONT_ARRAY=$(echo "$FONTS" | tr '\n' ' ')
+FONT_ARRAY=($FONT_ARRAY)
+
+# Function to change the font using setfont
+set_console_font() {
+    local font=$1
+    echo "Applying font: $font"
+    setfont "$font"
+}
+
+echo "Once started, use the up & down arrow keys to cycle through fonts."
+echo "Press enter to begin."
+read -r
+clear
+
+# Start with the first font
+current_index=0
+set_console_font "${FONT_ARRAY[$current_index]}"
+
+# Loop to navigate fonts with arrow keys
+while true; do
+    read -rsn1 key  # Read 1 character (-n1) silently (-s)
+    if [ "$key" = $'\x1b' ]; then
+        read -rsn2 key  # Read the next two characters
+        case "$key" in
+            '[A')  # Up arrow
+                if [ "$current_index" -gt 0 ]; then
+                    current_index=$((current_index - 1))
+                    set_console_font "${FONT_ARRAY[$current_index]}"
+                fi
+                ;;
+            
+            '[B')  # Down arrow
+                if [ "$current_index" -lt $((FONT_COUNT - 1)) ]; then
+                    current_index=$((current_index + 1))
+                    set_console_font "${FONT_ARRAY[$current_index]}"
+                fi
+                ;;
+        esac
+    elif [ "$key" = $"\n" ]; then
+        echo "Exiting."
+        exit 0
+    elif [ "$key" = "q" ]; then
+        exit 0
+    fi
+done

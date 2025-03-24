@@ -1,0 +1,8 @@
+Welcome to ArchLinux!
+Fosmark Edition
+
+- To change the screen rotation, run `./rotate`
+- To adjust the font, run `./font`
+- To connect to a wireless network, run `./connect`
+- To download the custom installation scripts, run `./getscripts`
+- To start the standard Arch installation, run `archinstall`

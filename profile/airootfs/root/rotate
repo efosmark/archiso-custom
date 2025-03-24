@@ -1,0 +1,27 @@
+#!/usr/bin/sh
+
+echo 
+echo "SET THE SCREEN ORIENTATION"
+echo "=========================="
+echo 
+echo "Press 0,1,2,3 until you find your proper orientation."
+echo "This will write values to /sys/class/graphics/fbcon/rotate"
+
+char=""
+while true; do
+    read -rsn1 char
+    if [ -z "$char" ]; then
+        exit
+    fi
+
+    case "$char" in
+        0|1|2|3) 
+            echo "$char" > /sys/class/graphics/fbcon/rotate
+            ;;
+        *) 
+            echo 
+            echo "Invalid value. Must be 0-3."
+            exit
+            ;;
+    esac
+done
